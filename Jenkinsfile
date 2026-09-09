@@ -37,7 +37,7 @@ pipeline {
             steps {
                 // The express does not support builds and runs as a nodejs process
                 echo "Building"
-                npm install
+                sh 'npm install'
                 echo "Build Complete"
             }
         }
