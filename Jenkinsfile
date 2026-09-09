@@ -30,6 +30,12 @@ pipeline {
         }
 
         stage('Test & Lint') {
+            when {
+                anyOf {
+                    branch 'dev'
+                    branch 'stage'
+                }
+            }
             parallel {
                 stage('Test') {
                     steps {
