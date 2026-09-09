@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'local-node-1' }
 
     tools {
         nodejs 'Node-22'
@@ -64,7 +64,6 @@ pipeline {
         }
 
         stage('Package') {
-            agent { label 'local-node-1' }
             steps {
                 sh """
                     rm -f ${ARCHIVE_NAME}
@@ -79,7 +78,6 @@ pipeline {
             when {
                 branch 'production'
             }
-            agent { label 'local-node-1' }
             steps {
                 withCredentials([sshUserPrivateKey(
                     credentialsId: "${EC2_SSH_CREDENTIALS_ID}",
