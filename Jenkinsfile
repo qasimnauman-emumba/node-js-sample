@@ -14,6 +14,10 @@ pipeline {
     environment {
         ARCHIVE_NAME = "node-js-sample-${env.BUILD_NUMBER}.tar.gz"
         NOTIFY_EMAIL = "m.qasimnauman@gmail.com"
+
+        EC2_HOST = "54.205.49.229"
+        EC2_APP_PORT = "80"
+        EC2_SSH_CREDENTIALS_ID = "ec2-ssh"
     }
 
     stages {
@@ -24,8 +28,17 @@ pipeline {
         }
 
         stage('Build') {
+            when {
+                anyOf {
+                    branch 'dev'
+                    branch 'stage'
+                }
+            }
             steps {
-                sh 'npm install'
+                // The express does not support builds and runs as a nodejs process
+                echo "Building"
+                npm install
+                echo "Build Complete"
             }
         }
 
@@ -51,6 +64,7 @@ pipeline {
         }
 
         stage('Package') {
+            agent { label 'local-node-1' }
             steps {
                 sh """
                     rm -f ${ARCHIVE_NAME}
@@ -62,7 +76,22 @@ pipeline {
         }
 
         stage('Deploy') {
+            when {
+                branch 'production'
+            }
+            agent { label 'local-node-1' }
             steps {
+                withCredentials([sshUserPrivateKey(
+                    credentialsId: "${EC2_SSH_CREDENTIALS_ID}",
+                    keyFileVariable: 'SSH_KEY',
+                    usernameVariable: 'SSH_USER'
+                )]) {
+                    sh """
+                        ssh -i \$SSH_KEY -o StrictHostKeyChecking=no \$SSH_USER@${EC2_HOST} 'mkdir -p ~/node-js-sample'
+                        scp -i \$SSH_KEY -o StrictHostKeyChecking=no ${ARCHIVE_NAME} scripts/deploy-ec2.sh \$SSH_USER@${EC2_HOST}:~/node-js-sample/
+                        ssh -i \$SSH_KEY -o StrictHostKeyChecking=no \$SSH_USER@${EC2_HOST} 'chmod +x ~/node-js-sample/deploy-ec2.sh && ~/node-js-sample/deploy-ec2.sh ${ARCHIVE_NAME} ${EC2_APP_PORT}'
+                    """
+                }
                 echo 'Deployment Successful!'
             }
         }
