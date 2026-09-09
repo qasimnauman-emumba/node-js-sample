@@ -4,10 +4,15 @@
   "description": "A sample Node.js app using Express 4",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "node test/test.js",
+    "lint": "eslint ."
   },
   "dependencies": {
     "express": "^4.13.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0"
   },
   "engines": {
     "node": "4.0.0"
