@@ -2,9 +2,7 @@ pipeline {
     agent any
 
     tools {
-        // Name must match a NodeJS installation configured under
-        // Manage Jenkins > Tools > NodeJS installations (NodeJS Plugin)
-        nodejs 'NodeJS'
+        nodejs 'Node-22'
     }
 
     options {
@@ -14,7 +12,8 @@ pipeline {
     }
 
     environment {
-        ARCHIVE_NAME = "node-js-sample-${env.BUILD_NUMBER}.zip"
+        ARCHIVE_NAME = "node-js-sample-${env.BUILD_NUMBER}.tar.gz"
+        NOTIFY_EMAIL = "m.qasimnauman@gmail.com"
     }
 
     stages {
@@ -49,7 +48,8 @@ pipeline {
             steps {
                 sh """
                     rm -f ${ARCHIVE_NAME}
-                    zip -r ${ARCHIVE_NAME} . -x 'node_modules/*' -x '.git/*' -x '*.zip'
+                    tar --exclude='./node_modules' --exclude='./.git' -czf /tmp/${ARCHIVE_NAME} .
+                    mv /tmp/${ARCHIVE_NAME} ${ARCHIVE_NAME}
                 """
                 archiveArtifacts artifacts: "${ARCHIVE_NAME}", fingerprint: true
             }
@@ -64,26 +64,26 @@ pipeline {
 
     post {
         success {
-            emailext(
+            mail(
+                to: "${NOTIFY_EMAIL}",
                 subject: "SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                body: """<p>Build succeeded.</p>
-                         <p>Job: ${env.JOB_NAME}<br/>
-                         Build Number: ${env.BUILD_NUMBER}<br/>
-                         Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>""",
-                mimeType: 'text/html',
-                to: '${DEFAULT_RECIPIENTS}'
+                body: """Build succeeded.
+
+                Job: ${env.JOB_NAME}
+                Build Number: ${env.BUILD_NUMBER}
+                Build URL: ${env.BUILD_URL}"""
             )
         }
         failure {
-            emailext(
+            mail(
+                to: "${NOTIFY_EMAIL}",
                 subject: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                body: """<p>Build failed.</p>
-                         <p>Job: ${env.JOB_NAME}<br/>
-                         Build Number: ${env.BUILD_NUMBER}<br/>
-                         Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a><br/>
-                         Console Log: <a href="${env.BUILD_URL}console">${env.BUILD_URL}console</a></p>""",
-                mimeType: 'text/html',
-                to: '${DEFAULT_RECIPIENTS}'
+                body: """Build failed.
+                
+                Job: ${env.JOB_NAME}
+                Build Number: ${env.BUILD_NUMBER}
+                Build URL: ${env.BUILD_URL}
+                Console Log: ${env.BUILD_URL}console"""
             )
         }
         always {
