@@ -49,7 +49,8 @@ pipeline {
             steps {
                 sh """
                     rm -f ${ARCHIVE_NAME}
-                    tar --exclude='./node_modules' --exclude='./.git' --exclude='*.tar.gz' -czf ${ARCHIVE_NAME} .
+                    tar --exclude='./node_modules' --exclude='./.git' -czf /tmp/${ARCHIVE_NAME} .
+                    mv /tmp/${ARCHIVE_NAME} ${ARCHIVE_NAME}
                 """
                 archiveArtifacts artifacts: "${ARCHIVE_NAME}", fingerprint: true
             }
