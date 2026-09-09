@@ -4,7 +4,7 @@ pipeline {
     tools {
         // Name must match a NodeJS installation configured under
         // Manage Jenkins > Tools > NodeJS installations (NodeJS Plugin)
-        nodejs 'NodeJS'
+        nodejs 'Node-22'
     }
 
     options {
