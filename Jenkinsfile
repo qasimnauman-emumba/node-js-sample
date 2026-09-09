@@ -14,7 +14,7 @@ pipeline {
     }
 
     environment {
-        ARCHIVE_NAME = "node-js-sample-${env.BUILD_NUMBER}.zip"
+        ARCHIVE_NAME = "node-js-sample-${env.BUILD_NUMBER}.tar.gz"
     }
 
     stages {
@@ -49,7 +49,7 @@ pipeline {
             steps {
                 sh """
                     rm -f ${ARCHIVE_NAME}
-                    zip -r ${ARCHIVE_NAME} . -x 'node_modules/*' -x '.git/*' -x '*.zip'
+                    tar --exclude='./node_modules' --exclude='./.git' --exclude='*.tar.gz' -czf ${ARCHIVE_NAME} .
                 """
                 archiveArtifacts artifacts: "${ARCHIVE_NAME}", fingerprint: true
             }
